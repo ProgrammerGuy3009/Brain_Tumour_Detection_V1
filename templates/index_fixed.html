@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Detection - Research Grade</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #1e3c72;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.05em;
+        }
+        
+        .research-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .upload-section {
+            margin: 30px 0;
+        }
+        
+        .upload-box {
+            border: 3px dashed #2a5298;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            background: #f0f5ff;
+            transition: all 0.3s;
+        }
+        
+        .upload-box:hover {
+            background: #e0ecff;
+            transform: translateY(-3px);
+        }
+        
+        #imagePreview {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(42, 82, 152, 0.3); 
+        }
+        .btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+        
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        
+        .result {
+            display: none;
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border-left: 5px solid #2a5298;
+        }
+        
+        .result.show { 
+            display: block; 
+            animation: slideIn 0.5s; 
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .prediction-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #2a5298;
+        }
+        
+        .prediction-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #1e3c72;
+            margin: 10px 0;
+        }
+        
+        .confidence {
+            font-size: 1.3em;
+            color: #2a5298;
+            font-weight: bold;
+        }
+        
+        .clinical-recommendation {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .recommendation-green { border-left-color: #10b981; color: #10b981; }
+        .recommendation-orange { border-left-color: #f59e0b; color: #f59e0b; }
+        .recommendation-red { border-left-color: #ef4444; color: #ef4444; }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e7ff;
+        }
+        
+        .metric-label { color: #666; font-size: 0.9em; margin-bottom: 5px; }
+        .metric-value { font-size: 1.8em; font-weight: bold; color: #2a5298; }
+        
+        .visualization-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .visualization-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .visualization-title::before {
+            content: "📊";
+            margin-right: 10px;
+        }
+        
+        #advancedViz {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .viz-placeholder {
+            background: #f0f5ff;
+            border: 2px dashed #2a5298;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #2a5298;
+            font-size: 1.1em;
+        }
+        
+        .data-export {
+            background: #f0f5ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .export-btn {
+            margin: 10px;
+            background: #10b981;
+        }
+        
+        .export-btn:hover { 
+            background: #059669; 
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #e0e7ff;
+            border-top: 4px solid #2a5298;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e7ff;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .header h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Brain Tumor Detection</h1>
+            <p>Research-Grade AI with Explainability & Uncertainty Quantification</p>
+            <div class="research-badge">🔬 RESEARCH PUBLICATION READY</div>
+        </div>
+        
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div style="font-size: 3em; margin-bottom: 10px;">📤</div>
+                <p><strong>Click to upload or drag and drop MRI image</strong></p>
+                <p style="font-size: 0.9em; color: #999;">PNG, JPG, JPEG (Max 10MB)</p>
+                <button class="btn" id="uploadBtn">Choose File</button>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+            <img id="imagePreview" alt="MRI Preview">
+        </div>
+        
+        <button class="btn predict-btn" id="predictBtn" disabled>Analyze with Advanced AI</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Analyzing MRI with uncertainty quantification...</p>
+        </div>
+        
+        <div class="result" id="result">
+            <!-- PRIMARY PREDICTION -->
+            <div class="prediction-box">
+                <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">PREDICTED DIAGNOSIS:</div>
+                <div class="prediction-value" id="predictionResult">-</div>
+                <div class="confidence">Confidence: <span id="confidenceResult">-</span></div>
+            </div>
+            
+            <!-- CLINICAL RECOMMENDATION -->
+            <div class="clinical-recommendation" id="clinicalRec">
+                Loading...
+            </div>
+            
+            <!-- UNCERTAINTY METRICS (RESEARCH FEATURE) -->
+            <div class="visualization-section">
+                <div class="visualization-title">🔬 Bayesian Uncertainty Quantification</div>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">Epistemic Uncertainty</div>
+                        <div class="metric-value" id="epistemicUnc">-</div>
+                        <p style="font-size: 0.8em; color: #999; margin-top: 5px;">(Model uncertainty)</p>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Aleatoric Uncertainty</div>
+                        <div class="metric-value" id="aleatoricUnc">-</div>
+                        <p style="font-size: 0.8em; color: #999; margin-top: 5px;">(Data noise)</p>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Prediction Margin</div>
+                        <div class="metric-value" id="margin">-</div>
+                        <p style="font-size: 0.8em; color: #999; margin-top: 5px;">(Top 2 difference)</p>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Model Reliability</div>
+                        <div class="metric-value" id="reliability">-</div>
+                        <p style="font-size: 0.8em; color: #999; margin-top: 5px;">(Overall score)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PROBABILITY DISTRIBUTION -->
+            <div class="visualization-section">
+                <div class="visualization-title">📊 Class Probability Distribution</div>
+                <div id="probabilitiesList"></div>
+            </div>
+            
+            <!-- ADVANCED MULTI-PANEL VISUALIZATION -->
+            <div class="visualization-section">
+                <div class="visualization-title">🎨 Integrated Analysis Dashboard</div>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                    Comprehensive visualization including original MRI, Grad-CAM attention map, overlay, 
+                    probability distribution, and uncertainty metrics.
+                </p>
+                <div id="vizContainer">
+                    <img id="advancedViz" src="" alt="Advanced Visualization" style="display:none;">
+                    <div class="viz-placeholder" id="vizPlaceholder">Visualization will appear here after analysis</div>
+                </div>
+            </div>
+            
+            <!-- DATA EXPORT FOR RESEARCH -->
+            <div class="data-export">
+                <h3>📥 Research Data & Analytics</h3>
+                <p style="margin: 10px 0; color: #666;">
+                    Export prediction data and view analytics for research publication
+                </p>
+                <button class="btn export-btn" onclick="exportResearchData()">📊 Export CSV Data</button>
+                <button class="btn export-btn" onclick="viewAnalytics()">📈 View Analytics</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>🔬 Research-Grade AI System with Grad-CAM Explainability & Bayesian Uncertainty</p>
+            <p>For educational, research, and clinical support purposes only</p>
+        </footer>
+    </div>
+    
+    <script>
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const predictBtn = document.getElementById('predictBtn');
+        const imagePreview = document.getElementById('imagePreview');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        
+        // File upload handlers
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.style.background = '#d4e8ff';
+        });
+        
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.style.background = '#f0f5ff';
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.style.background = '#f0f5ff';
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect();
+        });
+        
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                predictBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Prediction handler
+        predictBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            loading.style.display = 'block';
+            result.classList.remove('show');
+            predictBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/predict', { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    alert('Error: ' + (data.error || 'Prediction failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(data) {
+            // Prediction
+            document.getElementById('predictionResult').textContent = data.prediction;
+            document.getElementById('confidenceResult').textContent = data.confidence;
+            
+            // Clinical Recommendation
+            const recBox = document.getElementById('clinicalRec');
+            recBox.textContent = data.clinical_recommendation;
+            recBox.className = 'clinical-recommendation recommendation-' + data.recommendation_color;
+            
+            // Uncertainty Metrics
+            document.getElementById('epistemicUnc').textContent = data.uncertainty_metrics.epistemic;
+            document.getElementById('aleatoricUnc').textContent = data.uncertainty_metrics.aleatoric;
+            document.getElementById('margin').textContent = data.uncertainty_metrics.margin;
+            document.getElementById('reliability').textContent = data.uncertainty_metrics.reliability;
+            
+            // Probabilities
+            const probList = document.getElementById('probabilitiesList');
+            probList.innerHTML = '';
+            
+            for (const [name, prob] of Object.entries(data.probabilities)) {
+                const probValue = parseFloat(prob);
+                const item = document.createElement('div');
+                item.style.display = 'flex';
+                item.style.marginBottom = '10px';
+                item.style.alignItems = 'center';
+                item.innerHTML = `
+                    <span style="min-width: 120px; font-weight: 500;">${name}</span>
+                    <div style="flex-grow: 1; background: #e0e7ff; margin: 0 15px; border-radius: 5px; overflow: hidden; height: 25px;">
+                        <div style="background: linear-gradient(90deg, #2a5298 0%, #1e3c72 100%); width: ${probValue}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 0.8em; font-weight: bold;">
+                            ${probValue > 10 ? probValue.toFixed(1) + '%' : ''}
+                        </div>
+                    </div>
+                    <span style="min-width: 60px; text-align: right; font-weight: bold; color: #2a5298;">${prob}</span>
+                `;
+                probList.appendChild(item);
+            }
+            
+            // Advanced Visualization - FIXED VERSION
+            if (data.advanced_visualization) {
+                const vizImg = document.getElementById('advancedViz');
+                const vizPlaceholder = document.getElementById('vizPlaceholder');
+                
+                vizImg.onload = function() {
+                    vizImg.style.display = 'block';
+                    vizPlaceholder.style.display = 'none';
+                };
+                
+                vizImg.onerror = function() {
+                    vizPlaceholder.textContent = 'Visualization loading...';
+                    console.error('Image failed to load');
+                };
+                
+                vizImg.src = data.advanced_visualization;
+            }
+            
+            result.classList.add('show');
+        }
+        
+        function exportResearchData() {
+            window.location.href = '/export_research_data';
+        }
+        
+        async function viewAnalytics() {
+            try {
+                const response = await fetch('/analytics');
+                const data = await response.json();
+                
+                let analyticsText = `
+📊 ANALYTICS SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━
+Total Predictions: ${data.total_predictions}
+Avg Confidence: ${(data.average_confidence * 100).toFixed(2)}%
+Std Dev: ${(data.std_confidence * 100).toFixed(2)}%
+Avg Entropy: ${data.average_entropy.toFixed(3)}
+
+CLASS DISTRIBUTION:
+`;
+                for (const [cls, count] of Object.entries(data.class_distribution)) {
+                    analyticsText += `${cls}: ${count}\n`;
+                }
+                
+                alert(analyticsText);
+            } catch (error) {
+                alert('Error loading analytics: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
